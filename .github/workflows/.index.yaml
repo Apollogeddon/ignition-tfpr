@@ -142,17 +142,6 @@ jobs:
       pages: write
       id-token: write
 
-  # a pull request opened with the workflow token starts no workflow, so the release
-  # pull request asks for its review here
-  review-release:
-    needs: release
-    if: needs.release.outputs.pr_number != ''
-    uses: apollogeddon/forgego/.github/workflows/review.yml@main
-    with:
-      pull_request: ${{ needs.release.outputs.pr_number }}
-    permissions:
-      pull-requests: write
-
   # pull requests only: on main, webpage.yaml runs on its own push trigger
   webpage:
     if: github.event_name == 'pull_request'
