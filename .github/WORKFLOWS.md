@@ -12,7 +12,7 @@ The [`.index.yaml`](./workflows/.index.yaml) workflow runs on every pull request
 4. **Ignition**: starts a real Ignition gateway with Docker Compose and runs the acceptance tests against it, after testing and Trivy pass.
 5. **Release**: on `main` only, after every previous check passes.
 6. **Webpage**: on a pull request, the documentation site's checks and build (see [Documentation](#documentation)).
-7. **Auto-merge**: merges a Dependabot pull request through [forgejs](https://github.com/apollogeddon/forgejs)'s `merge.yml`, once every job above has passed or been skipped.
+7. **Auto-merge**: merges a Dependabot pull request through forgego's `merge.yml`, once every job above has passed or been skipped.
 
 A new push to a pull request cancels its previous run. On `main`, the documentation site runs from its own push trigger.
 
@@ -62,8 +62,9 @@ The unit tests, the acceptance tests and the documentation build all use the Ope
 
 The [`release.yaml`](./workflows/release.yaml) workflow versions and publishes the provider:
 
-- **release-please**: manages version bumps and `CHANGELOG.md` from Conventional Commits.
-- **GoReleaser**: builds the provider in the layout the Terraform Registry expects (`.goreleaser.yaml`): a zip per platform, a `SHA256SUMS` file signed with the release GPG key, and the provider manifest (`terraform-registry-manifest.json`).
+- **Version**: calls [forgego](https://github.com/apollogeddon/forgego)'s `version.yml`, whose release-please manages version bumps and `CHANGELOG.md` from Conventional Commits, and requests a review of the release pull request it opens.
+- **Publish**: when a release was created, GoReleaser builds the provider in the layout the Terraform Registry expects (`.goreleaser.yaml`): a zip per platform, a `SHA256SUMS` file signed with the release GPG key, and the provider manifest (`terraform-registry-manifest.json`). It stays here rather than in forgego's `service.yml`, which doesn't sign the checksums.
+- **Webpage**: rebuilds and deploys the documentation site, so its provider mirror lists the new release.
 
 release-please creates each release as a draft; GoReleaser attaches the files and then publishes it, so the flow also works with immutable releases. Releases are published on GitHub only: the provider is not yet listed on the OpenTofu or Terraform registry. To try the build locally, run `task release:snapshot`, which skips signing.
 

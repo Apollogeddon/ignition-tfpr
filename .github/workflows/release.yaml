@@ -2,10 +2,6 @@ name: Release
 
 on:
   workflow_call:
-    outputs:
-      pr_number:
-        description: "The release pull request release-please opened or updated; empty if none"
-        value: ${{ jobs.version.outputs.pr_number }}
   workflow_dispatch:
 
 permissions:
@@ -13,25 +9,17 @@ permissions:
   pull-requests: write
 
 jobs:
+  # forgego's release-please, with .github/release.json; it also requests the review of
+  # the release pull request it opens, which the workflow token's pull request can't start
   version:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    outputs:
-      releases_created: ${{ steps.release.outputs.releases_created }}
-      # the release pull request release-please opened or updated, if any
-      pr_number: ${{ steps.release.outputs.pr && fromJSON(steps.release.outputs.pr).number || '' }}
-    steps:
-      - name: Release Please
-        id: release
-        uses: googleapis/release-please-action@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          config-file: .github/release.json
-          manifest-file: .github/.release.json
+    uses: apollogeddon/forgego/.github/workflows/version.yml@main
+    permissions:
+      contents: write
+      pull-requests: write
 
   publish:
     needs: version
-    if: needs.version.outputs.releases_created == 'true'
+    if: needs.version.outputs.new_release_published == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
